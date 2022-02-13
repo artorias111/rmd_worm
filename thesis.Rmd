@@ -8,8 +8,6 @@ output: html_document
 
 the libraries
 ```{r}
-install.packages("knitr")
-install.packages("rmarkdown")
 library("tidyverse")
 library("plotly")
 library("DT")
@@ -19,13 +17,15 @@ library("ggrepel")
 library("genetics")
 library("ggnewscale")
 library("cowplot")
+library("gggenes")
 ```
 
 Box plots of c.e. telomere lengths:
 
 ```{r}
-ce_len <- read_tsv('/projects/b1059/projects/Shriram/data/elegans/lengths/eleg_strain.tsv')
-ce_len <- ce_len %>% arrange(desc(length))
+ce_len <- read_tsv('/projects/b1059/projects/Shriram/data/elegans/lengths/eleg_strain.tsv') %>% arrange(desc(length))
+ce_len_isotype <- read_tsv('/projects/b1059/projects/Shriram/data/elegans/lengths/eleg_mean.tsv')
+
 
 pe <- ce_len %>% mutate(strain=fct_reorder(strain,length)) %>%
       ggplot(aes(x=strain,y=length)) + 
@@ -37,8 +37,9 @@ pe
 Box plots of c.b telomere lengths: 
 
 ```{r}
-cb_len <- as_tibble(read_tsv('/projects/b1059/projects/Shriram/data/briggsae/lengths/brig_strain.tsv'))
-cb_len <- cb_len %>% arrange(desc(length))
+cb_len <- as_tibble(read_tsv('/projects/b1059/projects/Shriram/data/briggsae/lengths/brig_strain.tsv')) %>% arrange(desc(length))
+cb_len_isotype <- read_tsv('/projects/b1059/projects/Shriram/data/briggsae/lengths/brig_mean.tsv')
+
 
 pb <- cb_len %>% mutate(strain=fct_reorder(strain,length)) %>%
       ggplot(aes(x=strain,y=length)) + 
@@ -50,8 +51,9 @@ pb
 Box plots of c.t telomere lengths: 
 
 ```{r}
-ct_len <- as_tibble(read_tsv('/projects/b1059/projects/Shriram/data/tropicalis/lengths/trop_strain.tsv'))
-ct_len <- ct_len %>% arrange(desc(length))
+ct_len <- as_tibble(read_tsv('/projects/b1059/projects/Shriram/data/tropicalis/lengths/trop_strain.tsv')) %>% arrange(desc(length))
+ct_len_isotype <- read_tsv('/projects/b1059/projects/Shriram/data/tropicalis/lengths/trop_mean.tsv')
+
 
 pt <- ct_len %>% mutate(strain=fct_reorder(strain,length)) %>%
       ggplot(aes(x=strain,y=length)) + 
@@ -315,8 +317,7 @@ man.plot <-  ggplot2::ggplot() +
   ggplot2::geom_hline(data = BF.frame, aes(yintercept = BF), linetype = 2) + 
   ggplot2::geom_hline(data = BF.frame, aes(yintercept = EIGEN), linetype = 3) + 
   ggplot2::labs(x = "",
-                #y = expression(-log[10](italic(p)))) +
-                y="") +
+                y = expression(-log[10](italic(p)))) +
   ggplot2::theme(legend.position = "none", 
                  panel.grid = element_blank()) + 
   ggplot2::facet_grid(. ~ CHROM, scales = "free_x", space = "free") +
@@ -325,3 +326,47 @@ man.plot <-  ggplot2::ggplot() +
 trop_manplot <- man.plot
 trop_manplot
 ```
+
+
+Genotype Matrix: 
+
+
+```{r}
+brig_geno <- read_tsv('/projects/b1059/projects/Shriram/data/briggsae/nemascan_runs/Analysis_Results-20211219/Genotype_Matrix/Genotype_Matrix.tsv')
+```
+
+
+Shortlisted genes: 
+
+1. cbrmrt-1.2
+https://wormbase.org/species/c_briggsae/gene/WBGene00030471#0-9fdg6-10
+
+```{r}
+#cbrmrt-1.2
+cbrmrt1 <- brig_geno %>% filter(POS>=15329043 & POS<=15332022) %>% filter(CHROM=="I")
+brig_temp <- cbrmrt1 %>% pivot_longer(
+    cols=!CHROM & !POS & !REF & !ALT,
+    names_to = "isotype",
+    values_to = "altref"
+)
+brig_temp <- brig_temp %>% inner_join(cb_len_isotype) %>% filter(altref==-1) %>% dplyr::select(POS,length,isotype) 
+cbrmrt1_plot <- brig_temp %>% ggplot(aes(x=POS,y=length)) + geom_boxplot(alpha=0.2,aes(group=POS)) + geom_jitter(color="black", size=0.2, alpha=0.2) + xlim(15329043,15332022)
+cbrmrt1_plot
+```
+
+2. cbr-aex5
+https://wormbase.org/species/c_briggsae/gene/WBGene00038888#0-9fdg6-10
+
+```{r}
+#cbr-aex-5
+cbraex5 <- brig_geno %>% filter(POS>=14669282 & POS<=14679748) %>% filter(CHROM=="I")
+brig_temp <- cbraex5 %>% pivot_longer(
+    cols=!CHROM & !POS & !REF & !ALT,
+    names_to = "isotype",
+    values_to = "altref"
+)
+brig_temp <- brig_temp %>% inner_join(cb_len_isotype) %>% filter(altref==-1) %>% dplyr::select(POS,length) 
+cbraex5_plot <- brig_temp %>% ggplot(aes(x=POS,y=length)) + geom_boxplot(alpha=0.2,aes(group=POS)) + geom_jitter(color="black", size=0.2, alpha=0.2) + xlim(14669282,14679748)
+cbraex5_plot
+```
+
