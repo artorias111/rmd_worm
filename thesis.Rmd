@@ -6,7 +6,7 @@ output: html_document
 ---
 
 
-the libraries
+#the libraries
 ```{r}
 library("tidyverse")
 library("plotly")
@@ -20,6 +20,9 @@ library("cowplot")
 library("gggenes")
 ```
 
+
+#Population distribution : box plots
+
 Box plots of c.e. telomere lengths:
 
 ```{r}
@@ -30,7 +33,7 @@ ce_len_isotype <- read_tsv('/projects/b1059/projects/Shriram/data/elegans/length
 pe <- ce_len %>% mutate(strain=fct_reorder(strain,length)) %>%
       ggplot(aes(x=strain,y=length)) + 
         xlab("elegans strains")+ 
-        geom_bar(stat='identity',fill="#f68060")
+        geom_bar(stat='identity',fill="#f68060") 
 pe
 ```
 
@@ -43,8 +46,9 @@ cb_len_isotype <- read_tsv('/projects/b1059/projects/Shriram/data/briggsae/lengt
 
 pb <- cb_len %>% mutate(strain=fct_reorder(strain,length)) %>%
       ggplot(aes(x=strain,y=length)) + 
-        xlab("briggsae strains")+ 
-        geom_bar(stat='identity',fill="#f68060")
+        geom_bar(stat='identity',fill="#f68060") +
+        xlab("briggsae strains")
+
 pb
 ```
 
@@ -336,7 +340,7 @@ brig_geno <- read_tsv('/projects/b1059/projects/Shriram/data/briggsae/nemascan_r
 ```
 
 
-Shortlisted genes: 
+#Shortlisted genes: 
 
 1. cbrmrt-1.2
 https://wormbase.org/species/c_briggsae/gene/WBGene00030471#0-9fdg6-10
@@ -344,15 +348,61 @@ https://wormbase.org/species/c_briggsae/gene/WBGene00030471#0-9fdg6-10
 ```{r}
 #cbrmrt-1.2
 cbrmrt1 <- brig_geno %>% filter(POS>=15329043 & POS<=15332022) %>% filter(CHROM=="I")
-brig_temp <- cbrmrt1 %>% pivot_longer(
+brig_temp1 <- cbrmrt1 %>% pivot_longer(
     cols=!CHROM & !POS & !REF & !ALT,
     names_to = "isotype",
     values_to = "altref"
 )
-brig_temp <- brig_temp %>% inner_join(cb_len_isotype) %>% filter(altref==-1) %>% dplyr::select(POS,length,isotype) 
-cbrmrt1_plot <- brig_temp %>% ggplot(aes(x=POS,y=length)) + geom_boxplot(alpha=0.2,aes(group=POS)) + geom_jitter(color="black", size=0.2, alpha=0.2) + xlim(15329043,15332022)
-cbrmrt1_plot
+brig_temp <- brig_temp1 %>% inner_join(cb_len_isotype) %>% filter(altref==-1) %>% dplyr::select(POS,length,isotype)
+mrt_gene <- read_tsv('/projects/b1059/projects/Shriram/data/briggsae/goi/regional_gffs/cbrmrt1.tsv')
+
+position_list <- brig_temp %>% count(POS) %>% dplyr::select(POS)
+
+cbrmrt1_plot <- brig_temp %>% ggplot(aes(x=POS,y=length,group=POS)) + 
+  geom_boxplot() + 
+  geom_jitter(color="black", alpha=0.1) + 
+  xlim(15329043,15332022) + 
+  theme(axis.title = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank(), legend.position = "none") + 
+  geom_vline(xintercept = c(mrt_gene$start),linetype="dashed",alpha=0.5) 
+
+cbrmrt1_gene_plot <- ggplot(mrt_gene, aes(xmin = start, xmax = end, y = molecule, fill = gene)) + 
+  gggenes::geom_gene_arrow(arrowhead_height = unit(3, "mm"), arrowhead_width = unit(1, "mm")) + 
+  theme(axis.title = element_blank(),axis.text = element_blank(),axis.ticks = element_blank(), legend.position = "none") +
+  geom_vline(xintercept = c(mrt_gene$start),linetype="dashed",alpha=0.5) 
+
+#green intron, pink exon
+
+
+p <- plot_grid(cbrmrt1_gene_plot,cbrmrt1_plot,ncol=1,rel_widths = c(1,1),rel_heights = c(1,6))
+#p <- plot_grid(p,)
+
+p
+
 ```
+
+```{r}
+
+iso_list <- brig_temp1 %>% filter(altref==-1) %>% dplyr::select(strain=isotype) %>% distinct() %>% add_column(status=1)
+cbrmrt_strains <- cb_len %>% mutate(strain=fct_reorder(strain,length))
+
+x <- as_tibble(setdiff(cbrmrt_strains$strain,iso_list$strain)) 
+y <- x %>% add_column(status=-1)
+y <- y %>% rename(strain=value)
+
+z <- full_join(iso_list,y)
+k <- inner_join(cb_len,z)
+
+cbrmrt_bar <- k %>% mutate(strain=fct_reorder(strain,length)) %>%
+      ggplot(aes(x=strain,y=length,fill=as.factor(status))) + 
+        labs(fill="deletion") +
+        geom_bar(stat='identity') +
+        xlab("briggsae strains")
+
+cbrmrt_bar
+```
+
+
+
 
 2. cbr-aex5
 https://wormbase.org/species/c_briggsae/gene/WBGene00038888#0-9fdg6-10
