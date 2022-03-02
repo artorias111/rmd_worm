@@ -27,43 +27,51 @@ Box plots of c.e. telomere lengths:
 
 ```{r}
 ce_len <- read_tsv('/projects/b1059/projects/Shriram/data/elegans/lengths/eleg_strain.tsv') %>% arrange(desc(length))
-ce_len_isotype <- read_tsv('/projects/b1059/projects/Shriram/data/elegans/lengths/eleg_mean.tsv')
+ce_len_isotype <- read_tsv('/projects/b1059/projects/Shriram/data/elegans/lengths/eleg_isotype.tsv')
 
 
-pe <- ce_len %>% mutate(strain=fct_reorder(strain,length)) %>%
+pe <- ce_len_isotype %>% mutate(strain=fct_reorder(isotype,length)) %>%
       ggplot(aes(x=strain,y=length)) + 
-        xlab("elegans strains")+ 
-        geom_bar(stat='identity',fill="#f68060") 
+  theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(), legend.position = "none") +
+  xlab("elegans isotypes") +
+  geom_bar(stat='identity',fill="#f68060") 
 pe
+
+ggsave("pe.png",dpi=300,height=4,width = 8, units = "in")
 ```
 
 Box plots of c.b telomere lengths: 
 
 ```{r}
 cb_len <- as_tibble(read_tsv('/projects/b1059/projects/Shriram/data/briggsae/lengths/brig_strain.tsv')) %>% arrange(desc(length))
-cb_len_isotype <- read_tsv('/projects/b1059/projects/Shriram/data/briggsae/lengths/brig_mean.tsv')
+cb_len_isotype <- read_tsv('/projects/b1059/projects/Shriram/data/briggsae/lengths/brig_isotype.tsv')
 
 
-pb <- cb_len %>% mutate(strain=fct_reorder(strain,length)) %>%
-      ggplot(aes(x=strain,y=length)) + 
+pb <- cb_len_isotype %>% mutate(isotype=fct_reorder(isotype,length)) %>%
+      ggplot(aes(x=isotype,y=length)) + 
         geom_bar(stat='identity',fill="#f68060") +
-        xlab("briggsae strains")
+    theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(), legend.position = "none") +
+        xlab("briggsae isotypes")
 
 pb
+ggsave("pb.png",dpi=300,height=4,width = 8, units = "in")
 ```
 
 Box plots of c.t telomere lengths: 
 
 ```{r}
 ct_len <- as_tibble(read_tsv('/projects/b1059/projects/Shriram/data/tropicalis/lengths/trop_strain.tsv')) %>% arrange(desc(length))
-ct_len_isotype <- read_tsv('/projects/b1059/projects/Shriram/data/tropicalis/lengths/trop_mean.tsv')
+ct_len_isotype <- read_tsv('/projects/b1059/projects/Shriram/data/tropicalis/lengths/trop_isotype.tsv')
 
 
-pt <- ct_len %>% mutate(strain=fct_reorder(strain,length)) %>%
-      ggplot(aes(x=strain,y=length)) + 
-        xlab("tropicalis strains")+ 
+pt <- ct_len_isotype %>% mutate(isotype=fct_reorder(isotype,length)) %>%
+      ggplot(aes(x=isotype,y=length)) + 
+    theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(), legend.position = "none") +
+        xlab("tropicalis isotypes")+ 
         geom_bar(stat='identity',fill="#f68060")
 pt
+
+ggsave("pt.png",dpi=300,height=4,width = 8, units = "in")
 ```
 #Manhattan plots:
 
@@ -141,7 +149,7 @@ man.plot <-  ggplot2::ggplot() +
                                   y = log10p
                                   ),
                                   shape=25,
-                                  size=2,
+                                  size=1,
                                   fill="blue") +
   ggplot2::geom_hline(data = BF.frame, aes(yintercept = BF), linetype = 2) + 
   ggplot2::geom_hline(data = BF.frame, aes(yintercept = EIGEN), linetype = 3) + 
@@ -227,13 +235,13 @@ man.plot <-  ggplot2::ggplot() +
                                   y = log10p
                                   ),
                                   shape=25,
-                                  size=2,
+                                  size=1,#2
                                   fill="blue") +
   ggplot2::geom_hline(data = BF.frame, aes(yintercept = BF), linetype = 2) + 
   ggplot2::geom_hline(data = BF.frame, aes(yintercept = EIGEN), linetype = 3) + 
   ggplot2::labs(x = "",
-                #y = expression(-log[10](italic(p)))) +
-                y="") +
+                y = expression(-log[10](italic(p)))) +
+                #y="") +
   ggplot2::theme(legend.position = "none", 
                  panel.grid = element_blank()) + 
   ggplot2::facet_grid(. ~ CHROM, scales = "free_x", space = "free") +
@@ -309,27 +317,43 @@ man.plot <-  ggplot2::ggplot() +
                                    y = log10p), 
                                    alpha = 0.5,
                                    size=0.25) +
-  ggplot2::scale_y_continuous(expand = c(0,0), limits = c(0,BF + 6.7)) +
+  ggplot2::scale_y_continuous(expand = c(0,0), limits = c(0,5.05)) +
   scale_x_continuous(expand = c(0, 0), breaks = c(5, 10, 15, 20)) +
   ggplot2::geom_point(data = trop_genes, 
                       mapping=aes(x = POS/1000000, 
                                   y = log10p
                                   ),
                                   shape=25,
-                                  size=2,
+                                  size=1,
                                   fill="blue") +
   ggplot2::geom_hline(data = BF.frame, aes(yintercept = BF), linetype = 2) + 
   ggplot2::geom_hline(data = BF.frame, aes(yintercept = EIGEN), linetype = 3) + 
-  ggplot2::labs(x = "",
-                y = expression(-log[10](italic(p)))) +
+  ggplot2::labs(x = "position",
+                #y = expression(-log[10](italic(p)))) +
+                y="")+
   ggplot2::theme(legend.position = "none", 
                  panel.grid = element_blank()) + 
   ggplot2::facet_grid(. ~ CHROM, scales = "free_x", space = "free") +
+  #ggplot2::ylim(0.0,5.0)+
   ggplot2::theme(plot.title = element_text(face = "italic"))
 
 trop_manplot <- man.plot
 trop_manplot
 ```
+
+combine plots: 
+```{r}
+p <- plot_grid(eleg_manplot,brig_manplot,trop_manplot,ncol=1,align = "v",labels = c("A","B","C"))
+p
+ggsave("a.png",width=7.5,height=8,units="in",dpi=300)
+```
+
+
+
+
+
+
+
 
 
 Genotype Matrix: 
@@ -348,6 +372,7 @@ https://wormbase.org/species/c_briggsae/gene/WBGene00030471#0-9fdg6-10
 ```{r}
 #cbrmrt-1.2
 cbrmrt1 <- brig_geno %>% filter(POS>=15329043 & POS<=15332022) %>% filter(CHROM=="I")
+#cbrmrt1 <- brig_geno %>% filter(POS==15329877) %>% filter(CHROM=="I")
 brig_temp1 <- cbrmrt1 %>% pivot_longer(
     cols=!CHROM & !POS & !REF & !ALT,
     names_to = "isotype",
@@ -362,7 +387,7 @@ cbrmrt1_plot <- brig_temp %>% ggplot(aes(x=POS,y=length,group=POS)) +
   geom_boxplot() + 
   geom_jitter(color="black", alpha=0.1) + 
   xlim(15329043,15332022) + 
-  theme(axis.title = element_blank(),axis.text.y = element_blank(),axis.ticks.y = element_blank(), legend.position = "none") + 
+  theme(axis.title = element_blank(), legend.position = "none",) + 
   geom_vline(xintercept = c(mrt_gene$start),linetype="dashed",alpha=0.5) 
 
 cbrmrt1_gene_plot <- ggplot(mrt_gene, aes(xmin = start, xmax = end, y = molecule, fill = gene)) + 
@@ -374,32 +399,40 @@ cbrmrt1_gene_plot <- ggplot(mrt_gene, aes(xmin = start, xmax = end, y = molecule
 
 
 p <- plot_grid(cbrmrt1_gene_plot,cbrmrt1_plot,ncol=1,rel_widths = c(1,1),rel_heights = c(1,6))
-#p <- plot_grid(p,)
-
+p <- plot_grid(p)
 p
 
 ```
 
 ```{r}
 
-iso_list <- brig_temp1 %>% filter(altref==-1) %>% dplyr::select(strain=isotype) %>% distinct() %>% add_column(status=1)
-cbrmrt_strains <- cb_len %>% mutate(strain=fct_reorder(strain,length))
+iso_list <- brig_temp1 %>% filter(altref==-1) %>% dplyr::select(isotype) %>% distinct() %>% add_column(status=1)
+cbrmrt_strains <- cb_len_isotype %>% mutate(isotype=fct_reorder(isotype,length))
 
-x <- as_tibble(setdiff(cbrmrt_strains$strain,iso_list$strain)) 
+x <- as_tibble(setdiff(cbrmrt_strains$isotype,iso_list$isotype)) 
 y <- x %>% add_column(status=-1)
-y <- y %>% rename(strain=value)
+y <- y %>% dplyr::rename(isotype=value)
 
 z <- full_join(iso_list,y)
-k <- inner_join(cb_len,z)
+k <- inner_join(cb_len_isotype,z)
 
-cbrmrt_bar <- k %>% mutate(strain=fct_reorder(strain,length)) %>%
-      ggplot(aes(x=strain,y=length,fill=as.factor(status))) + 
-        labs(fill="deletion") +
+cbrmrt_bar <- k %>% mutate(isotype=fct_reorder(isotype,length)) %>%
+      ggplot(aes(x=isotype,y=length,fill=as.factor(status))) + 
+        labs(fill="alt") + 
         geom_bar(stat='identity') +
-        xlab("briggsae strains")
+        theme(axis.text.x = element_blank(),axis.ticks.x = element_blank()) +
+        xlab("briggsae isotypes")+
+        ggtitle("cbr mrt-1")
 
 cbrmrt_bar
 ```
+
+Gene model: (from gff)
+
+```{r}
+#in scripts
+```
+
 
 
 
@@ -409,14 +442,121 @@ https://wormbase.org/species/c_briggsae/gene/WBGene00038888#0-9fdg6-10
 
 ```{r}
 #cbr-aex-5
-cbraex5 <- brig_geno %>% filter(POS>=14669282 & POS<=14679748) %>% filter(CHROM=="I")
-brig_temp <- cbraex5 %>% pivot_longer(
+#cbraex5 <- brig_geno %>% filter(POS>=14669282 & POS<=14679748) %>% filter(CHROM=="I")
+cbraex5 <- brig_geno %>% filter(POS==14674007) %>% filter(CHROM=="I")
+brig_temp1 <- cbraex5 %>% pivot_longer(
     cols=!CHROM & !POS & !REF & !ALT,
     names_to = "isotype",
     values_to = "altref"
 )
-brig_temp <- brig_temp %>% inner_join(cb_len_isotype) %>% filter(altref==-1) %>% dplyr::select(POS,length) 
-cbraex5_plot <- brig_temp %>% ggplot(aes(x=POS,y=length)) + geom_boxplot(alpha=0.2,aes(group=POS)) + geom_jitter(color="black", size=0.2, alpha=0.2) + xlim(14669282,14679748)
+
+iso_list <- brig_temp1 %>% filter(altref==-1) %>% dplyr::select(isotype) %>% distinct() %>% add_column(status=1)
+cbraex_strains <- cb_len_isotype %>% mutate(isotype=fct_reorder(isotype,length))
+
+x <- as_tibble(setdiff(cbraex_strains$isotype,iso_list$isotype)) 
+y <- x %>% add_column(status=-1)
+y <- y %>% dplyr::rename(isotype=value)
+
+z <- full_join(iso_list,y)
+k <- inner_join(cb_len_isotype,z)
+
+cbraex_bar <- k %>% mutate(isotype=fct_reorder(isotype,length)) %>%
+      ggplot(aes(x=isotype,y=length,fill=as.factor(status))) + 
+        labs(fill="alt") + 
+        geom_bar(stat='identity') +
+        theme(axis.text.x = element_blank(),axis.ticks.x = element_blank()) +
+        xlab("briggsae isotypes")+
+  ggtitle("cbr aex-5")
+
+cbraex_bar
+ggsave("cbraex-5.png",dpi=300,height=4,width = 8, units = "in")
+```
+#aex-5 box plot
+```{r}
+
+brig_temp <- brig_temp1 %>% inner_join(cb_len_isotype) %>% filter(altref==-1) %>% dplyr::select(POS,length,isotype)
+cbraex5_plot <- brig_temp %>% ggplot(aes(x=POS,y=length,group=POS)) + 
+  geom_boxplot() + 
+  #geom_jitter(color="black", alpha=0.1) + 
+  xlim(14669282,14679748) + 
+  theme(axis.title = element_blank(), legend.position = "none",) + 
+  geom_vline(xintercept = c(mrt_gene$start),linetype="dashed",alpha=0.5) 
+
 cbraex5_plot
 ```
+
+
+pot-2 elegans
+
+```{r}
+eleg_geno <- read_tsv("/projects/b1059/projects/Shriram/data/elegans/nemascan_runs/Analysis_Results-20211219/Genotype_Matrix/Genotype_Matrix.tsv")
+celpot2 <- eleg_geno %>% filter(POS==14518226) %>% filter(CHROM=="II")
+eleg_temp1 <- celpot2 %>% pivot_longer(
+    cols=!CHROM & !POS & !REF & !ALT,
+    names_to = "isotype",
+    values_to = "altref"
+)
+
+iso_list <- eleg_temp1 %>% filter(altref==-1) %>% dplyr::select(isotype) %>% distinct() %>% add_column(status=1)
+celpot2_strains <- ce_len_isotype %>% mutate(isotype=fct_reorder(isotype,length))
+
+x <- as_tibble(setdiff(celpot2_strains$isotype,iso_list$isotype)) 
+y <- x %>% add_column(status=-1)
+y <- y %>% dplyr::rename(isotype=value)
+
+z <- full_join(iso_list,y)
+k <- inner_join(ce_len_isotype,z)
+
+celpot2_bar <- k %>% mutate(isotype=fct_reorder(isotype,length)) %>%
+      ggplot(aes(x=isotype,y=length,fill=as.factor(status))) + 
+        labs(fill="alt") + 
+        geom_bar(stat='identity') +
+        theme(axis.text.x = element_blank(),axis.ticks.x = element_blank()) +
+        xlab("elegans isotypes")+
+ggtitle("c eleg pot-2")
+
+celpot2_bar
+ggsave("celpot2.png",dpi=300,height=4,width = 8, units = "in")
+
+```
+
+tropicalis goi (CTROP-g6527)
+)
+```{r}
+trop_geno <- read_tsv("/projects/b1059/projects/Shriram/data/tropicalis/nemascan_runs/Analysis_Results-20220209/Genotype_Matrix/Genotype_Matrix.tsv")
+ctrop <- trop_geno %>% filter(POS==1365536) %>% filter(CHROM=="I")
+trop_temp1 <- ctrop %>% pivot_longer(
+    cols=!CHROM & !POS & !REF & !ALT,
+    names_to = "isotype",
+    values_to = "altref"
+)
+
+iso_list <- trop_temp1 %>% filter(altref==-1) %>% dplyr::select(isotype) %>% distinct() %>% add_column(status=1)
+ctrop_strains <- ct_len_isotype %>% mutate(isotype=fct_reorder(isotype,length))
+
+x <- as_tibble(setdiff(ctrop_strains$isotype,iso_list$isotype)) 
+y <- x %>% add_column(status=-1)
+y <- y %>% dplyr::rename(isotype=value)
+
+z <- full_join(iso_list,y)
+k <- inner_join(ct_len_isotype,z)
+
+ctrop_bar <- k %>% mutate(isotype=fct_reorder(isotype,length)) %>%
+      ggplot(aes(x=isotype,y=length,fill=as.factor(status))) + 
+        labs(fill="alt") + 
+        geom_bar(stat='identity') +
+        theme(axis.text.x = element_blank(),axis.ticks.x = element_blank()) +
+        xlab("tropicalis isotypes")+
+  ggtitle("c tropicalis CTROP-g6527")
+
+ctrop_bar
+ggsave("ctrop.png",dpi=300,height=4,width = 8, units = "in")
+```
+
+
+
+
+
+
+
 
