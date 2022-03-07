@@ -364,7 +364,164 @@ brig_geno <- read_tsv('/projects/b1059/projects/Shriram/data/briggsae/nemascan_r
 ```
 
 
+
+
+#gene model function
+```{r}
+
+gene_model <- function(df, genename = NA, WBID = NA, gene_color = "blue", intron_color = "black",
+                       utr3_color = "gray60", utr5_color = "gray60", gene_alpha = 0.5) {
+    if(is.na(genename)){
+        if(is.na(WBID)) {
+            stop("No gene provided. Give either gene name or WB ID")
+        } else {
+            selection <- df %>%
+                dplyr::filter(wbgene == WBID)
+        }
+    } else {
+        selection <- df %>%
+            dplyr::filter(gene == genename)
+    }
+    
+    if(nrow(selection) > 1){
+        stop("multiple entries with given gene name.")
+    }
+    
+    if(selection$strand == "+"){
+        
+        selection$txend <- as.numeric(selection$txend)
+        selection$codingend <- as.numeric(selection$codingend)
+        exonstarts <- matrix(as.numeric(unlist(strsplit(selection$exonstarts, ",")), ncol = selection$numexons))
+        
+        exonends <- matrix(as.numeric(unlist(strsplit(selection$exonends, ",")), ncol = selection$numexons))
+        
+        allexons <- data.frame("starts" = exonstarts, "ends" = exonends)
+        
+        intronstarts <- exonends[1:(nrow(exonends)-1)]
+        
+        intronends <- exonstarts[2:(nrow(exonends))]
+        
+        allintrons <- data.frame("starts" = intronstarts, "ends" = intronends) %>%
+            dplyr::mutate(midpoint = (starts+ends)/2)
+        
+        endUTR <- data.frame("x" = c(selection$codingend, selection$codingend, selection$txend), "y" = c(1, -1, 0))
+        
+        plot <- ggplot(allexons)+
+            geom_segment(aes(x = txstart, xend = txend, y = 0, yend = 0), data = selection, color = "black")+
+            geom_rect( aes(xmin =  starts, xmax = ends, ymin = -1 , ymax = 1), fill = gene_color, color = "black", alpha = gene_alpha)+
+            geom_segment(aes(x = starts, y = 1, xend = midpoint, yend = 2), data = allintrons, color = intron_color)+
+            geom_segment(aes(x = midpoint, y = 2, xend = ends, yend = 1), data = allintrons, color = intron_color)+
+            geom_rect(aes(xmin = txstart, xmax = codingstart, ymin = -1, ymax = 1), data = selection, fill = utr3_color)+
+            geom_rect(aes(xmin = codingend, xmax = txend, ymin = -1, ymax = 1), data = selection, fill= "white", color = "white", lwd = 1.2)+
+            geom_polygon(aes(x = x, y = y), data = endUTR, fill = utr5_color, color = "black")+
+            theme_void()
+        
+        return(plot)
+        
+    } else {
+        
+        selection$txend <- as.numeric(selection$txend)
+        selection$codingend <- as.numeric(selection$codingend)
+        exonstarts <- matrix(as.numeric(unlist(strsplit(selection$exonstarts, ",")), ncol = selection$numexons))
+        
+        exonends <- matrix(as.numeric(unlist(strsplit(selection$exonends, ",")), ncol = selection$numexons))
+        
+        allexons <- data.frame("starts" = exonstarts, "ends" = exonends)
+        
+        intronstarts <- exonends[1:(nrow(exonends)-1)]
+        
+        intronends <- exonstarts[2:(nrow(exonends))]
+        
+        allintrons <- data.frame("starts" = intronstarts, "ends" = intronends) %>%
+            dplyr::mutate(midpoint = (starts+ends)/2)
+        
+        endUTR <- data.frame("x" = c(selection$codingstart, selection$codingstart, selection$txstart), "y" = c(1, -1, 0))
+        
+        plot <- ggplot(allexons)+
+            geom_segment(aes(x = txend, xend = txstart, y = 0, yend = 0), data = selection, color = "black")+
+            geom_rect( aes(xmin =  starts, xmax = ends, ymin = -1 , ymax = 1), fill = gene_color, color = "black", alpha = gene_alpha)+
+            geom_segment(aes(x = starts, y = 1, xend = midpoint, yend = 2), data = allintrons, color = intron_color)+
+            geom_segment(aes(x = midpoint, y = 2, xend = ends, yend = 1), data = allintrons, color = intron_color)+
+            geom_rect(aes(xmin = txend, xmax = codingend, ymin = -1, ymax = 1), data = selection, fill = utr3_color)+
+            geom_rect(aes(xmin = codingstart, xmax = txstart, ymin = -1, ymax = 1), data = selection, fill= "white", color = "white", lwd = 1.2)+
+            geom_polygon(aes(x = x, y = y), data = endUTR, fill = utr5_color, color = "black")+
+            theme_void()
+        
+        return(plot)
+    }
+}
+
+goi_list <- tibble(
+  gene='',
+  chr='',
+  strand='+',
+  txstart=0,
+  txend=0,
+  codingstart=txstart,
+  codingend=txend,
+  numexons=0,
+  wbgene='Wb000',
+  gene_name=gene,
+  biotype='protein_coding',
+  exonstarts='',
+  exonends='',
+  type='Transcript'
+)
+
+```{r}
+
+goi_list <- tibble(
+  gene='',
+  chr='',
+  strand='+',
+  txstart=0,
+  txend=0,
+  codingstart=txstart,
+  codingend=txend,
+  numexons=0,
+  wbgene='Wb000',
+  gene_name=gene,
+  biotype='protein_coding',
+  exonstarts='',
+  exonends='',
+  type='Transcript'
+)
+
+#what needs to be added: gene, chr, txtstart,txtend,codingstart,codingend,numexons,exonstarts,exonends,
+```
+
+
 #Shortlisted genes: 
+
+#gene models
+
+1. elegans pot-2
+14524151    14525132
+```{r}
+goi_list <- goi_list %>% add_row(
+  gene='pot2',
+  chr='II',
+  strand='+',
+  txstart=14524151,
+  txend=14525132,
+  codingstart=14524173,
+  codingend=14525108,
+  numexons=0,
+  wbgene='Wb000',
+  gene_name=gene,
+  biotype='protein_coding',
+  exonstarts='14524173,14524585,14524884',
+  exonends='14524539,14524832,14525108',
+  type='transcript'
+)
+
+pot2_model <- gene_model(goi_list,'pot2')
+```
+
+
+
+
+
 
 1. cbrmrt-1.2
 https://wormbase.org/species/c_briggsae/gene/WBGene00030471#0-9fdg6-10
@@ -387,7 +544,7 @@ cbrmrt1_plot <- brig_temp %>% ggplot(aes(x=POS,y=length,group=POS)) +
   geom_boxplot() + 
   geom_jitter(color="black", alpha=0.1) + 
   xlim(15329043,15332022) + 
-  theme(axis.title = element_blank(), legend.position = "none",) + 
+  theme(axis.title = element_blank(), axis.text=element_blank(), axis.ticks=element_blank(),legend.position = "none",) + 
   geom_vline(xintercept = c(mrt_gene$start),linetype="dashed",alpha=0.5) 
 
 cbrmrt1_gene_plot <- ggplot(mrt_gene, aes(xmin = start, xmax = end, y = molecule, fill = gene)) + 
@@ -459,14 +616,15 @@ y <- y %>% dplyr::rename(isotype=value)
 
 z <- full_join(iso_list,y)
 k <- inner_join(cb_len_isotype,z)
+k <- k %>% mutate(status=as.character(status)) %>% mutate(status=str_replace(status,"-1","alt")) %>% mutate(status=str_replace(status,"1","ref"))
 
 cbraex_bar <- k %>% mutate(isotype=fct_reorder(isotype,length)) %>%
       ggplot(aes(x=isotype,y=length,fill=as.factor(status))) + 
-        labs(fill="alt") + 
+        labs(fill="isotype") + 
         geom_bar(stat='identity') +
         theme(axis.text.x = element_blank(),axis.ticks.x = element_blank()) +
-        xlab("briggsae isotypes")+
-  ggtitle("cbr aex-5")
+        xlab(expression(paste(italic('C. briggsae')," isotypes")))+
+  ggtitle(expression(italic("cbr aex-5")))
 
 cbraex_bar
 ggsave("cbraex-5.png",dpi=300,height=4,width = 8, units = "in")
@@ -506,10 +664,11 @@ y <- y %>% dplyr::rename(isotype=value)
 
 z <- full_join(iso_list,y)
 k <- inner_join(ce_len_isotype,z)
+k <- k %>% mutate(status=as.character(status)) %>% mutate(status=str_replace(status,"-1","alt")) %>% mutate(status=str_replace(status,"1","ref"))
 
 celpot2_bar <- k %>% mutate(isotype=fct_reorder(isotype,length)) %>%
       ggplot(aes(x=isotype,y=length,fill=as.factor(status))) + 
-        labs(fill="alt") + 
+        labs(fill="isotype") + 
         geom_bar(stat='identity') +
         theme(axis.text.x = element_blank(),axis.ticks.x = element_blank()) +
         xlab("elegans isotypes")+
@@ -540,10 +699,11 @@ y <- y %>% dplyr::rename(isotype=value)
 
 z <- full_join(iso_list,y)
 k <- inner_join(ct_len_isotype,z)
+k <- k %>% mutate(status=as.character(status)) %>% mutate(status=str_replace(status,"-1","alt")) %>% mutate(status=str_replace(status,"1","ref"))
 
 ctrop_bar <- k %>% mutate(isotype=fct_reorder(isotype,length)) %>%
       ggplot(aes(x=isotype,y=length,fill=as.factor(status))) + 
-        labs(fill="alt") + 
+        labs(fill="isotype") + 
         geom_bar(stat='identity') +
         theme(axis.text.x = element_blank(),axis.ticks.x = element_blank()) +
         xlab("tropicalis isotypes")+
